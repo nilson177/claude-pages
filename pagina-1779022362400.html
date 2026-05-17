@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hora en España</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    /* Estrellas de fondo */
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.2; transform: scale(1); }
+      to   { opacity: 1;   transform: scale(1.3); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .flag {
+      font-size: 60px;
+      margin-bottom: 10px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-10px); }
+    }
+
+    .titulo {
+      font-size: 1.2rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #a0aec0;
+      margin-bottom: 30px;
+    }
+
+    .reloj-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      padding: 40px 60px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .hora {
+      font-size: 5rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      background: linear-gradient(90deg, #f7c948, #e05c5c, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      line-height: 1;
+    }
+
+    .segundos-bar {
+      margin: 16px auto 0;
+      width: 100%;
+      height: 5px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .segundos-progress {
+      height: 100%;
+      background: linear-gradient(90deg, #f7c948, #e05c5c);
+      border-radius: 10px;
+      transition: width 1s linear;
+    }
+
+    .fecha {
+      font-size: 1.3rem;
+      margin-top: 20px;
+      color: #e2e8f0;
+      letter-spacing: 1px;
+    }
+
+    .zona {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #718096;
+      letter-spacing: 2px;
+    }
+
+    .info-grid {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+      justify-content: center;
+    }
+
+    .info-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 16px 24px;
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .info-box .label {
+      font-size: 0.7rem;
+      color: #718096;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .info-box .value {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #f7c948;
+    }
+
+    @media (max-width: 500px) {
+      .hora { font-size: 3.5rem; }
+      .reloj-card { padding: 30px 30px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stars" id="stars"></div>
+
+  <div class="container">
+    <div class="flag">🇪🇸</div>
+    <div class="titulo">Hora Oficial de España</div>
+
+    <div class="reloj-card">
+      <div class="hora" id="hora">00:00:00</div>
+      <div class="segundos-bar">
+        <div class="segundos-progress" id="progreso" style="width:0%"></div>
+      </div>
+      <div class="fecha" id="fecha">—</div>
+      <div class="zona" id="zona">Europe/Madrid</div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="label">Día</div>
+        <div class="value" id="dia">—</div>
+      </div>
+      <div class="info-box">
+        <div class="label">Semana</div>
+        <div class="value" id="semana">—</div>
+      </div>
+      <div class="info-box">
+        <div class="label">Año</div>
+        <div class="value" id="anio">—</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Generar estrellas
+    const starsContainer = document.getElementById('stars');
+    for (let i = 0; i < 80; i++) {
+      const s = document.createElement('div');
+      s.classList.add('star');
+      const size = Math.random() * 3 + 1;
+      s.style.cssText = `
+        width: ${size}px; height: ${size}px;
+        top: ${Math.random() * 100}%;
+        left: ${Math.random() * 100}%;
+        animation-delay: ${Math.random() * 3}s;
+        animation-duration: ${2 + Math.random() * 3}s;
+      `;
+      starsContainer.appendChild(s);
+    }
+
+    const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+    function getNumSemana(fecha) {
+      const d = new Date(Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    function actualizar() {
+      const ahora = new Date();
+      const spain = new Date(ahora.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+
+      const h = String(spain.getHours()).padStart(2, '0');
+      const m = String(spain.getMinutes()).padStart(2, '0');
+      const s = String(spain.getSeconds()).padStart(2, '0');
+
+      document.getElementById('hora').textContent = `${h}:${m}:${s}`;
+      document.getElementById('progreso').style.width = `${(spain.getSeconds() / 59) * 100}%`;
+
+      const diaSemana = dias[spain.getDay()];
+      const dia = spain.getDate();
+      const mes = meses[spain.getMonth()];
+      const anio = spain.getFullYear();
+
+      document.getElementById('fecha').textContent = `${diaSemana}, ${dia} de ${mes} de ${anio}`;
+      document.getElementById('dia').textContent = dia;
+      document.getElementById('semana').textContent = getNumSemana(spain);
+      document.getElementById('anio').textContent = anio;
+
+      // Zona horaria
+      const offset = -spain.getTimezoneOffset ? '' : '';
+      const zonaReal = Intl.DateTimeFormat('es', {timeZone:'Europe/Madrid', timeZoneName:'short'})
+        .formatToParts(spain).find(p => p.type === 'timeZoneName')?.value || 'CET/CEST';
+      document.getElementById('zona').textContent = `Europe/Madrid · ${zonaReal}`;
+    }
+
+    actualizar();
+    setInterval(actualizar, 1000);
+  </script>
+</body>
+</html>
