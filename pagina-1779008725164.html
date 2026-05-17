@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .calc {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 24px;
+      width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+    }
+    .display {
+      background: rgba(0,0,0,0.3);
+      border-radius: 16px;
+      padding: 20px 16px 12px;
+      margin-bottom: 20px;
+      text-align: right;
+    }
+    .expression {
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+      min-height: 20px;
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .result {
+      color: #fff;
+      font-size: 42px;
+      font-weight: 300;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    button {
+      border: none;
+      border-radius: 14px;
+      font-size: 18px;
+      font-weight: 500;
+      height: 60px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+      outline: none;
+    }
+    button:active { transform: scale(0.93); }
+    .btn-num {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .btn-num:hover { background: rgba(255,255,255,0.18); }
+    .btn-op {
+      background: rgba(82, 130, 255, 0.25);
+      color: #7da4ff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .btn-op:hover { background: rgba(82, 130, 255, 0.4); }
+    .btn-clear {
+      background: rgba(255, 80, 80, 0.2);
+      color: #ff7070;
+    }
+    .btn-clear:hover { background: rgba(255, 80, 80, 0.35); }
+    .btn-eq {
+      background: linear-gradient(135deg, #5282ff, #a855f7);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(82,130,255,0.4);
+    }
+    .btn-eq:hover { box-shadow: 0 4px 28px rgba(82,130,255,0.6); }
+    .btn-zero { grid-column: span 2; }
+    .btn-del {
+      background: rgba(255, 160, 50, 0.2);
+      color: #ffa032;
+    }
+    .btn-del:hover { background: rgba(255, 160, 50, 0.35); }
+  </style>
+</head>
+<body>
+  <div class="calc">
+    <div class="display">
+      <div class="expression" id="expression"></div>
+      <div class="result" id="result">0</div>
+    </div>
+    <div class="buttons">
+      <button class="btn-clear" onclick="clearAll()">AC</button>
+      <button class="btn-del" onclick="deleteLast()">⌫</button>
+      <button class="btn-op" onclick="appendOp('%')">%</button>
+      <button class="btn-op" onclick="appendOp('/')">÷</button>
+
+      <button class="btn-num" onclick="appendNum('7')">7</button>
+      <button class="btn-num" onclick="appendNum('8')">8</button>
+      <button class="btn-num" onclick="appendNum('9')">9</button>
+      <button class="btn-op" onclick="appendOp('*')">×</button>
+
+      <button class="btn-num" onclick="appendNum('4')">4</button>
+      <button class="btn-num" onclick="appendNum('5')">5</button>
+      <button class="btn-num" onclick="appendNum('6')">6</button>
+      <button class="btn-op" onclick="appendOp('-')">−</button>
+
+      <button class="btn-num" onclick="appendNum('1')">1</button>
+      <button class="btn-num" onclick="appendNum('2')">2</button>
+      <button class="btn-num" onclick="appendNum('3')">3</button>
+      <button class="btn-op" onclick="appendOp('+')">+</button>
+
+      <button class="btn-num btn-zero" onclick="appendNum('0')">0</button>
+      <button class="btn-num" onclick="appendDot()">.</button>
+      <button class="btn-eq" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <script>
+    let current = '0';
+    let expression = '';
+    let justCalculated = false;
+
+    function updateDisplay() {
+      const res = document.getElementById('result');
+      document.getElementById('expression').textContent = expression;
+      res.textContent = current;
+      res.style.fontSize = current.length > 10 ? '26px' : current.length > 7 ? '34px' : '42px';
+    }
+
+    function appendNum(n) {
+      if (justCalculated) { current = n; expression = ''; justCalculated = false; }
+      else current = current === '0' ? n : current + n;
+      updateDisplay();
+    }
+
+    function appendDot() {
+      if (justCalculated) { current = '0.'; expression = ''; justCalculated = false; }
+      else if (!current.includes('.')) current += '.';
+      updateDisplay();
+    }
+
+    function appendOp(op) {
+      justCalculated = false;
+      const display = op === '/' ? '÷' : op === '*' ? '×' : op === '-' ? '−' : op;
+      expression = current + ' ' + display;
+      current = '0';
+      window._op = op;
+      window._prev = parseFloat(expression);
+      updateDisplay();
+    }
+
+    function calculate() {
+      try {
+        const expr = expression.replace('÷','/').replace('×','*').replace('−','-') + current;
+        let res = Function('"use strict"; return (' + expr + ')')();
+        expression = expr + ' =';
+        current = parseFloat(res.toFixed(10)).toString();
+        justCalculated = true;
+        updateDisplay();
+      } catch(e) {
+        current = 'Error';
+        updateDisplay();
+      }
+    }
+
+    function clearAll() {
+      current = '0'; expression = ''; justCalculated = false;
+      updateDisplay();
+    }
+
+    function deleteLast() {
+      if (justCalculated) { clearAll(); return; }
+      current = current.length > 1 ? current.slice(0, -1) : '0';
+      updateDisplay();
+    }
+  </script>
+</body>
+</html>
