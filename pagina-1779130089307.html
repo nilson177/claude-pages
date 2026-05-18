@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .calc {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border-radius: 28px;
+    padding: 24px;
+    width: 320px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .display {
+    background: rgba(0,0,0,0.3);
+    border-radius: 18px;
+    padding: 20px 20px 12px;
+    margin-bottom: 20px;
+    text-align: right;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  .display .expression {
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    min-height: 20px;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .display .result {
+    color: #fff;
+    font-size: 38px;
+    font-weight: 300;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  button {
+    padding: 18px 10px;
+    border: none;
+    border-radius: 16px;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  button:active { transform: scale(0.92); }
+  .btn-num {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+  .btn-num:hover { background: rgba(255,255,255,0.15); }
+  .btn-op {
+    background: rgba(82, 130, 255, 0.25);
+    color: #7aa8ff;
+  }
+  .btn-op:hover { background: rgba(82, 130, 255, 0.4); }
+  .btn-eq {
+    background: linear-gradient(135deg, #5282ff, #a259ff);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(82,130,255,0.4);
+  }
+  .btn-eq:hover { box-shadow: 0 8px 25px rgba(82,130,255,0.6); transform: scale(1.02); }
+  .btn-clear {
+    background: rgba(255, 80, 80, 0.2);
+    color: #ff7b7b;
+  }
+  .btn-clear:hover { background: rgba(255, 80, 80, 0.35); }
+  .btn-zero {
+    grid-column: span 2;
+  }
+  .btn-special {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.6);
+    font-size: 15px;
+  }
+  .btn-special:hover { background: rgba(255,255,255,0.12); }
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="display">
+    <div class="expression" id="expression"></div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="buttons">
+    <button class="btn-clear" onclick="clearAll()">AC</button>
+    <button class="btn-special" onclick="toggleSign()">+/-</button>
+    <button class="btn-special" onclick="percent()">%</button>
+    <button class="btn-op" onclick="setOp('/')">÷</button>
+
+    <button class="btn-num" onclick="addNum('7')">7</button>
+    <button class="btn-num" onclick="addNum('8')">8</button>
+    <button class="btn-num" onclick="addNum('9')">9</button>
+    <button class="btn-op" onclick="setOp('*')">×</button>
+
+    <button class="btn-num" onclick="addNum('4')">4</button>
+    <button class="btn-num" onclick="addNum('5')">5</button>
+    <button class="btn-num" onclick="addNum('6')">6</button>
+    <button class="btn-op" onclick="setOp('-')">−</button>
+
+    <button class="btn-num" onclick="addNum('1')">1</button>
+    <button class="btn-num" onclick="addNum('2')">2</button>
+    <button class="btn-num" onclick="addNum('3')">3</button>
+    <button class="btn-op" onclick="setOp('+')">+</button>
+
+    <button class="btn-num btn-zero" onclick="addNum('0')">0</button>
+    <button class="btn-num" onclick="addDecimal()">.</button>
+    <button class="btn-eq" onclick="calculate()">=</button>
+  </div>
+</div>
+
+<script>
+  let current = '0';
+  let previous = '';
+  let operator = null;
+  let shouldReset = false;
+
+  function updateDisplay() {
+    const res = document.getElementById('result');
+    const expr = document.getElementById('expression');
+    res.textContent = current.length > 10 ? parseFloat(current).toExponential(4) : current;
+    const opSymbols = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+    expr.textContent = previous && operator ? previous + ' ' + opSymbols[operator] : '';
+  }
+
+  function addNum(n) {
+    if (shouldReset) { current = ''; shouldReset = false; }
+    if (current === '0' && n !== '.') current = n;
+    else if (current.length < 12) current += n;
+    updateDisplay();
+  }
+
+  function addDecimal() {
+    if (shouldReset) { current = '0'; shouldReset = false; }
+    if (!current.includes('.')) current += '.';
+    updateDisplay();
+  }
+
+  function setOp(op) {
+    if (operator && !shouldReset) calculate(true);
+    previous = current;
+    operator = op;
+    shouldReset = true;
+    updateDisplay();
+  }
+
+  function calculate(chain = false) {
+    if (!operator || !previous) return;
+    const a = parseFloat(previous);
+    const b = parseFloat(current);
+    let r;
+    if (operator === '+') r = a + b;
+    else if (operator === '-') r = a - b;
+    else if (operator === '*') r = a * b;
+    else if (operator === '/') r = b !== 0 ? a / b : 'Error';
+    current = r === 'Error' ? 'Error' : String(parseFloat(r.toFixed(10)));
+    if (!chain) { operator = null; previous = ''; }
+    shouldReset = true;
+    updateDisplay();
+  }
+
+  function clearAll() {
+    current = '0'; previous = ''; operator = null; shouldReset = false;
+    updateDisplay();
+  }
+
+  function toggleSign() {
+    if (current !== '0') current = String(-parseFloat(current));
+    updateDisplay();
+  }
+
+  function percent() {
+    current = String(parseFloat(current) / 100);
+    updateDisplay();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key >= '0' && e.key <= '9') addNum(e.key);
+    else if (e.key === '.') addDecimal();
+    else if (e.key === '+') setOp('+');
+    else if (e.key === '-') setOp('-');
+    else if (e.key === '*') setOp('*');
+    else if (e.key === '/') { e.preventDefault(); setOp('/'); }
+    else if (e.key === 'Enter' || e.key === '=') calculate();
+    else if (e.key === 'Escape') clearAll();
+    else if (e.key === 'Backspace') {
+      if (current.length > 1) current = current.slice(0, -1);
+      else current = '0';
+      updateDisplay();
+    }
+  });
+</script>
+</body>
+</html>
