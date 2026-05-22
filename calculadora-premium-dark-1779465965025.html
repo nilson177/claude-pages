@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora Premium</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #6c63ff;
+      --secondary: #a78bfa;
+      --accent: #f472b6;
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #16213e;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --radius: 20px;
+      --radius-sm: 12px;
+      --shadow: 0 25px 50px rgba(0,0,0,0.5);
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 48px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+      opacity: 0;
+      animation: fadeIn 500ms ease forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(108,99,255,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(167,139,250,0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(244,114,182,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .calculator {
+      position: relative;
+      z-index: 1;
+      background: rgba(26, 26, 46, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: var(--space-lg);
+      width: 100%;
+      max-width: 360px;
+      box-shadow: var(--shadow), 0 0 0 1px rgba(108,99,255,0.1);
+    }
+
+    .calculator::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(108,99,255,0.6), rgba(167,139,250,0.6), transparent);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .display {
+      background: rgba(15,15,26,0.8);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      padding: var(--space-lg) var(--space-md);
+      margin-bottom: var(--space-md);
+      text-align: right;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: var(--space-xs);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .display::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(108,99,255,0.03) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .display-history {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      min-height: 20px;
+      letter-spacing: 0.5px;
+      transition: all 300ms ease;
+    }
+
+    .display-expression {
+      font-size: 1rem;
+      color: rgba(167,139,250,0.7);
+      font-weight: 400;
+      min-height: 24px;
+      letter-spacing: 0.5px;
+      transition: all 200ms ease;
+    }
+
+    .display-main {
+      font-size: clamp(2rem, 8vw, 2.8rem);
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: -1px;
+      transition: all 150ms ease;
+      line-height: 1;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-sm);
+    }
+
+    .btn {
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Inter', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 200ms cubic-bezier(0.16,1,0.3,1);
+      position: relative;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 150ms ease;
+    }
+
+    .btn:hover::after {
+      background: rgba(255,255,255,0.06);
+    }
+
+    .btn:active {
+      transform: scale(0.93);
+    }
+
+    .btn-number {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .btn-number:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+    }
+
+    .btn-operator {
+      background: rgba(108,99,255,0.15);
+      color: var(--secondary);
+      border: 1px solid rgba(108,99,255,0.2);
+    }
+
+    .btn-operator:hover {
+      background: rgba(108,99,255,0.25);
+      border-color: rgba(108,99,255,0.35);
+      transform: translateY(-2px);
+      color: #fff;
+    }
+
+    .btn-special {
+      background: rgba(255,255,255,0.04);
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.9rem;
+    }
+
+    .btn-special:hover {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      transform: translateY(-2px);
+    }
+
+    .btn-equals {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.35);
+      font-size: 1.3rem;
+    }
+
+    .btn-equals:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 30px rgba(108,99,255,0.5);
+      filter: brightness(1.1);
+    }
+
+    .btn-clear {
+      background: rgba(244,114,182,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(244,114,182,0.15);
+    }
+
+    .btn-clear:hover {
+      background: rgba(244,114,182,0.2);
+      border-color: rgba(244,114,182,0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn-zero {
+      grid-column: span 2;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transform: scale(0);
+      animation: rippleEffect 400ms ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes rippleEffect {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    .btn-press {
+      animation: press 100ms ease;
+    }
+
+    @keyframes press {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.93); }
+      100% { transform: scale(1); }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: var(--space-md);
+    }
+
+    .header h1 {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .header .dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      margin: 0 6px;
+      vertical-align: middle;
+      box-shadow: 0 0 8px rgba(108,99,255,0.6);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="calculator">
+  <div class="header">
+    <h1>Calc<span class="dot"></span>Pro</h1>
+  </div>
+
+  <div class="display">
+    <div class="display-history" id="history"></div>
+    <div class="display-expression" id="expression"></div>
+    <div class="display-main" id="display">0</div>
+  </div>
+
+  <div class="buttons">
+    <!-- Fila 1 -->
+    <button class="btn btn-clear" data-action="clear">AC</button>
+    <button class="btn btn-special" data-action="sign">+/−</button>
+    <button class="btn btn-special" data-action="percent">%</button>
+    <button class="btn btn-operator" data-action="operator" data-value="÷">÷</button>
+
+    <!-- Fila 2 -->
+    <button class="btn btn-number" data-action="number" data-value="7">7</button>
+    <button class="btn btn-number" data-action="number" data-value="8">8</button>
+    <button class="btn btn-number" data-action="number" data-value="9">9</button>
+    <button class="btn btn-operator" data-action="operator" data-value="×">×</button>
+
+    <!-- Fila 3 -->
+    <button class="btn btn-number" data-action="number" data-value="4">4</button>
+    <button class="btn btn-number" data-action="number" data-value="5">5</button>
+    <button class="btn btn-number" data-action="number" data-value="6">6</button>
+    <button class="btn btn-operator" data-action="operator" data-value="−">−</button>
+
+    <!-- Fila 4 -->
+    <button class="btn btn-number" data-action="number" data-value="1">1</button>
+    <button class="btn btn-number" data-action="number" data-value="2">2</button>
+    <button class="btn btn-number" data-action="number" data-value="3">3</button>
+    <button class="btn btn-operator" data-action="operator" data-value="+">+</button>
+
+    <!-- Fila 5 -->
+    <button class="btn btn-number btn-zero" data-action="number" data-value="0">0</button>
+    <button class="btn btn-number" data-action="decimal">.</button>
+    <button class="btn btn-equals" data-action="equals">=</button>
+  </div>
+</div>
+
+<script>
+  const display = document.getElementById('display');
+  const expression = document.getElementById('expression');
+  const history = document.getElementById('history');
+
+  let currentValue = '0';
+  let previousValue = '';
+  let operator = '';
+  let shouldResetDisplay = false;
+  let lastExpression = '';
+
+  function updateDisplay(value) {
+    let formatted = value;
+    if (!isNaN(value) && value !== '' && !value.toString().includes('e')) {
+      const num = parseFloat(value);
+      if (Math.abs(num) >= 1e9) {
+        formatted = num.toExponential(3);
+      } else {
+        formatted = parseFloat(value).toLocaleString('es-ES', {
+          maximumFractionDigits: 10
+        });
+        if (value.toString().endsWith('.')) formatted += ',';
+      }
+    }
+    display.textContent = formatted;
+    adjustFontSize(formatted.length);
+  }
+
+  function adjustFontSize(len) {
+    if (len > 14) display.style.fontSize = '1.4rem';
+    else if (len > 10) display.style.fontSize = '1.8rem';
+    else if (len > 7) display.style.fontSize = '2.2rem';
+    else display.style.fontSize = '';
+  }
+
+  function handleNumber(value) {
+    if (shouldResetDisplay) {
+      currentValue = value;
+      shouldResetDisplay = false;
+    } else {
+      if (currentValue === '0') {
+        currentValue = value;
+      } else {
+        if (currentValue.replace('.','').length >= 12) return;
+        currentValue += value;
+      }
+    }
+    updateDisplay(currentValue);
+    if (operator) {
+      expression.textContent = `${previousValue} ${operator} ${currentValue}`;
+    }
+  }
+
+  function handleOperator(op) {
+    if (operator && !shouldResetDisplay) {
+      calculate(false);
+    }
+    previousValue = currentValue;
+    operator = op;
+    shouldResetDisplay = true;
+    expression.textContent = `${previousValue} ${operator}`;
+    history.textContent = '';
+  }
+
+  function calculate(final = true) {
+    if (!operator || !previousValue) return;
+    const prev = parseFloat(previousValue.replace(',','.'));
+    const curr = parseFloat(currentValue.replace(',','.'));
+    let result;
+
+    switch(operator) {
+      case '+': result = prev + curr; break;
+      case '−': result = prev - curr; break;
+      case '×': result = prev * curr; break;
+      case '÷':
+        if (curr === 0) {
+          display.textContent = 'Error';
+          currentValue = '0';
+          operator = '';
+          previousValue = '';
+          expression.textContent = '';
+          history.textContent = 'División por cero';
+          shouldResetDisplay = true;
+          return;
+        }
+        result = prev / curr;
+        break;
+    }
+
+    const expr = `${previousValue} ${operator} ${currentValue}`;
+    const resultStr = result.toString();
+
+    if (final) {
+      history.textContent = expr + ' =';
+      expression.textContent = '';
+    }
+
+    currentValue = resultStr;
+    updateDisplay(currentValue);
+    operator = '';
+    previousValue = '';
+    shouldResetDisplay = true;
+  }
+
+  function handleClear() {
+    currentValue = '0';
+    previousValue = '';
+    operator = '';
+    shouldResetDisplay = false;
+    expression.textContent = '';
+    history.textContent = '';
+    updateDisplay('0');
+  }
+
+  function handleSign() {
+    if (currentValue === '0') return;
+    currentValue = (parseFloat(currentValue) * -1).toString();
+    updateDisplay(currentValue);
+  }
+
+  function handlePercent() {
+    const val = parseFloat(currentValue);
+    if (operator && previousValue) {
+      currentValue = ((parseFloat(previousValue) * val) / 100).toString();
+    } else {
+      currentValue = (val / 100).toString();
+    }
+    updateDisplay(currentValue);
+  }
+
+  function handleDecimal() {
+    if (shouldResetDisplay) {
+      currentValue = '0.';
+      shouldResetDisplay = false;
+    } else if (!currentValue.includes('.')) {
+      currentValue += '.';
+    }
+    updateDisplay(currentValue);
+  }
+
+  function addRipple(btn, e) {
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = (e.clientX - rect.left) - size / 2;
+    const y = (e.clientY - rect.top) - size / 2;
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple');
+    ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 400);
+  }
+
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      addRipple(btn, e);
+      const action = btn.dataset.action;
+      const value = btn.dataset.value;
+
+      switch(action) {
+        case 'number': handleNumber(value); break;
+        case 'operator': handleOperator(value); break;
+        case 'equals': calculate(true); break;
+        case 'clear': handleClear(); break;
+        case 'sign': handleSign(); break;
+        case 'percent': handlePercent(); break;
+        case 'decimal': handleDecimal(); break;
+      }
+    });
+  });
+
+  // Teclado físico
+  document.addEventListener('keydown', (e) => {
+    if (e.key >= '0' && e.key <= '9') handleNumber(e.key);
+    else if (e.key === '+') handleOperator('+');
+    else if (e.key === '-') handleOperator('−');
+    else if (e.key === '*') handleOperator('×');
+    else if (e.key === '/') { e.preventDefault(); handleOperator('÷'); }
+    else if (e.key === 'Enter' || e.key === '=') calculate(true);
+    else if (e.key === 'Escape') handleClear();
+    else if (e.key === '.') handleDecimal();
+    else if (e.key === '%') handlePercent();
+    else if (e.key === 'Backspace') {
+      if (currentValue.length > 1) {
+        currentValue = currentValue.slice(0, -1);
+        updateDisplay(currentValue);
+      } else {
+        currentValue = '0';
+        updateDisplay('0');
+      }
+    }
+  });
+</script>
+</body>
+</html>
